@@ -215,7 +215,7 @@ export default function Home() {
           </nav>
         </div>
         {showPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="fixed inset-0 bg-[#00000084] backdrop-blur-sm flex justify-center items-center">
             <div className="bg-white p-6 rounded shadow max-w-sm w-full">
               <h2 className="text-lg font-semibold mb-4">Enter Your Details</h2>
               <input

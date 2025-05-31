@@ -7,7 +7,7 @@ import { GrSend } from "react-icons/gr";
 import { PiHandWavingDuotone } from "react-icons/pi";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:4000");
+const socket = io("https://teemz.onrender.com");
 
 interface UserInfo {
   fullname: string;
@@ -17,6 +17,10 @@ interface UserInfo {
   [key: string]: any; // Allow additional properties
 }
 
+interface UserAvatarProps {
+  user: UserInfo;
+  showTooltip?: boolean;
+}
 interface Message {
   sender: UserInfo;
   text: string;
@@ -219,8 +223,44 @@ export default function Home() {
       .toUpperCase();
   }
 
+  function UserAvatar({ user, showTooltip = true }: UserAvatarProps) {
+    const [isHovered, setIsHovered] = useState(false);
+    const colorClass = getRandomColor(user.email);
+    const initials = getInitials(user.fullname);
+    const countryCode = countries.find((c) => c.name === user.country)?.code;
+
+    return (
+      <div className="relative">
+        <div
+          className={`w-8 h-8 rounded-full ${colorClass} flex items-center justify-center text-white text-xs font-bold border-2 border-white cursor-pointer`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {initials}
+        </div>
+        {showTooltip && isHovered && (
+          <div className="absolute z-10 top-full left-1/2 transform -translate-x-1/2 mb-2 bg-white shadow-lg rounded-lg p-3 w-48">
+            <div className="flex items-center gap-2 mb-2">
+              <Image
+                src={`https://flagsapi.com/${countryCode}/shiny/32.png`}
+                alt={user.country}
+                width={24}
+                height={24}
+                className="h-4 w-auto"
+              />
+              <span className="font-semibold capitalize">{user.fullname}</span>
+            </div>
+            <div className="text-xs text-gray-600 truncate">{user.email}</div>
+            <div className="text-xs text-gray-500 mt-1">{user.country}</div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-b-0 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <main className="max-w-full flex justify-center md:items-center py-10 px-5 mx-auto md:p-4 bg-slate-100 min-h-screen">
+    <main className="max-w-full flex justify-center md:items-center py-10 px-5 mx-auto md:p-4 bg-neutral-100 min-h-screen">
       <div className="w-4xl">
         <div className="flex justify-between items-center md:mb-6">
           <h1 className=" font-bold text-2xl md:text-4xl text-slate-600 md:mb-4">
@@ -232,14 +272,7 @@ export default function Home() {
           <div className="mb-2 flex items-center gap-1">
             <div className="md:hidden flex -space-x-2">
               {onlineUsers.slice(0, 4).map((user, index) => (
-                <div
-                  key={index}
-                  className={`w-8 h-8 rounded-full ${getRandomColor(
-                    user.email
-                  )} flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
-                >
-                  {getInitials(user.fullname)}
-                </div>
+                <UserAvatar key={index} user={user} />
               ))}
               {onlineUsers.length > 4 && (
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold border-2 border-white">
@@ -279,12 +312,21 @@ export default function Home() {
         </div>
         {showPopup && (
           <div className="fixed inset-0 bg-[#00000084] backdrop-blur-sm flex justify-center items-center">
-            <div className="bg-white grid grid-cols-1 mx-10 md:mx-0 rounded-2xl md:grid-cols-2  items-stretch  shadow max-w-2xl w-full">
+            <div className="bg-white grid grid-cols-1 mx-10 md:mx-0 rounded-2xl md:grid-cols-2  items-stretch  shadow max-w-3xl w-full">
               <div className="w-full hidden md:block h-full">
-                <Image src="/background.jpg" className="object-cover h-full " alt="background" width={500} height={500} />
+                <Image
+                  src="/bonjour.jpg"
+                  className="object-cover h-full "
+                  alt="background"
+                  width={500}
+                  height={500}
+                />
               </div>
               <div className="p-14 md:px-10 flex flex-col gap-3">
-                <h1 className="text-2xl text-center font-semibold">Welcome to <span className="text-purple-600 font-bold ">Bonjour</span></h1>
+                <h1 className="text-2xl text-center font-semibold">
+                  Welcome to{" "}
+                  <span className="text-purple-600 font-bold ">Bonjour</span>
+                </h1>
                 <h2 className="text-center  mb-4">
                   Enter Your Details to chat with others
                 </h2>
@@ -349,14 +391,7 @@ export default function Home() {
         <div className="mb-2 flex items-center gap-1">
           <div className="hidden md:flex -space-x-2">
             {onlineUsers.slice(0, 4).map((user, index) => (
-              <div
-                key={index}
-                className={`w-8 h-8 rounded-full ${getRandomColor(
-                  user.email
-                )} flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
-              >
-                {getInitials(user.fullname)}
-              </div>
+              <UserAvatar key={index} user={user} />
             ))}
             {onlineUsers.length > 4 && (
               <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold border-2 border-white">
@@ -441,7 +476,7 @@ export default function Home() {
           <button
             onClick={sendMessage}
             disabled={message.length < 1}
-            className="bg-blue-500 text-white px-4 py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
+            className="bg-blue-500 z-[1] text-white px-4 py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
           >
             <GrSend />
           </button>

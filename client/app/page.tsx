@@ -223,9 +223,10 @@ export default function Home() {
     <main className="max-w-full flex justify-center md:items-center py-10 px-5 mx-auto md:p-4 bg-slate-100 min-h-screen">
       <div className="w-4xl">
         <div className="flex justify-between items-center md:mb-6">
-          <h1 className=" font-bold text-2xl md:text-5xl md:mb-4">
-            <span className="text-lime-500 ">Idea</span>
-            <span className="text-neutral-700 ">Bubble</span>
+          <h1 className=" font-bold text-2xl md:text-4xl text-slate-600 md:mb-4">
+            {/* <span className="text-lime-500 ">Idea</span>
+            <span className="text-neutral-700 ">Bubble</span> */}
+            BONJOUR!
           </h1>
 
           <div className="mb-2 flex items-center gap-1">
@@ -278,61 +279,70 @@ export default function Home() {
         </div>
         {showPopup && (
           <div className="fixed inset-0 bg-[#00000084] backdrop-blur-sm flex justify-center items-center">
-            <div className="bg-white p-6 rounded shadow max-w-sm w-full">
-              <h2 className="text-lg font-semibold mb-4">Enter Your Details</h2>
-              <input
-                placeholder="Full Name"
-                autoFocus={true}
-                className="w-full mb-2 border px-3 py-2 rounded"
-                onChange={(e) =>
-                  setTempUser({ ...tempUser, fullname: e.target.value })
-                }
-              />
-              <input
-                placeholder="Email"
-                className="w-full mb-2 border px-3 py-2 rounded"
-                onChange={(e) =>
-                  setTempUser({ ...tempUser, email: e.target.value })
-                }
-              />
-              <div className="relative mb-4">
-                <select
-                  value={tempUser.country}
-                  onChange={(e) =>
-                    setTempUser({ ...tempUser, country: e.target.value })
-                  }
-                  className="w-full border px-3 py-2 rounded appearance-none"
-                >
-                  <option value="">Select Country</option>
-                  {countries.map((country) => (
-                    <option key={country.code} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-                {tempUser.country && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <Image
-                      src={`https://flagsapi.com/${
-                        countries.find((c) => c.name === tempUser.country)?.code
-                      }/shiny/32.png`}
-                      alt={tempUser.country}
-                      width={24}
-                      height={24}
-                      className="h-4 w-auto"
-                    />
-                  </div>
-                )}
+            <div className="bg-white grid grid-cols-1 mx-10 md:mx-0 rounded-2xl md:grid-cols-2  items-stretch  shadow max-w-2xl w-full">
+              <div className="w-full hidden md:block h-full">
+                <Image src="/background.jpg" className="object-cover h-full " alt="background" width={500} height={500} />
               </div>
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition-colors"
-                onClick={handleRegister}
-                disabled={
-                  !tempUser.fullname || !tempUser.email || !tempUser.country
-                }
-              >
-                Start Chatting
-              </button>
+              <div className="p-14 md:px-10 flex flex-col gap-3">
+                <h1 className="text-2xl text-center font-semibold">Welcome to <span className="text-purple-600 font-bold ">Bonjour</span></h1>
+                <h2 className="text-center  mb-4">
+                  Enter Your Details to chat with others
+                </h2>
+                <input
+                  placeholder="Full Name"
+                  autoFocus={true}
+                  className="w-full mb-2 border-b border-slate-500 focus:outline-0 focus:border-lime-700 px-3 py-2 rounded-xl"
+                  onChange={(e) =>
+                    setTempUser({ ...tempUser, fullname: e.target.value })
+                  }
+                />
+                <input
+                  placeholder="Email"
+                  className="w-full mb-2 border-b border-slate-500 focus:outline-0 focus:border-lime-700 px-3 py-2 rounded-xl"
+                  onChange={(e) =>
+                    setTempUser({ ...tempUser, email: e.target.value })
+                  }
+                />
+                <div className="relative mb-4">
+                  <select
+                    value={tempUser.country}
+                    onChange={(e) =>
+                      setTempUser({ ...tempUser, country: e.target.value })
+                    }
+                    className="w-full mb-2 border-b border-slate-500 focus:outline-0 focus:border-lime-700 px-3 py-2 rounded-xl appearance-none"
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                  {tempUser.country && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <Image
+                        src={`https://flagsapi.com/${
+                          countries.find((c) => c.name === tempUser.country)
+                            ?.code
+                        }/shiny/32.png`}
+                        alt={tempUser.country}
+                        width={24}
+                        height={24}
+                        className="h-4 w-auto"
+                      />
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="bg-purple-500 text-white px-4 py-2  w-full hover:bg-purple-700 transition-colors rounded-full"
+                  onClick={handleRegister}
+                  disabled={
+                    !tempUser.fullname || !tempUser.email || !tempUser.country
+                  }
+                >
+                  Start Chatting
+                </button>
+              </div>
             </div>
           </div>
         )}

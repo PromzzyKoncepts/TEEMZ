@@ -7,6 +7,7 @@ import { GrSend } from "react-icons/gr";
 import { PiHandWavingDuotone } from "react-icons/pi";
 import io from "socket.io-client";
 
+// const socket = io("http://localhost:4000");
 const socket = io("https://teemz.onrender.com");
 
 interface UserInfo {
@@ -25,6 +26,8 @@ interface Message {
   sender: UserInfo;
   text: string;
   timestamp: Date;
+  isSystemMessage?: boolean;
+   
 }
 
 function formatTimeAgo(date: Date): string {
@@ -45,6 +48,16 @@ function MessageBubble({
   isCurrentUser: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+
+  if (message.isSystemMessage) {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">
+          {message.text}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -166,6 +179,11 @@ export default function Home() {
     socket.on("message", (msg: Message) =>
       setMessages((prev) => [...prev, msg])
     );
+    
+    // Add this new event listener
+  socket.on("userJoined", (msg: Message) =>
+    setMessages((prev) => [...prev, msg])
+  );
 
     socket.on("typing", ({ sender, isTyping }) => {
       setTypingUsers((prev) => {
@@ -180,6 +198,7 @@ export default function Home() {
     return () => {
       socket.off("message");
       socket.off("typing");
+      socket.off("userJoined");
       socket.off("onlineUsers");
     };
   }, []);

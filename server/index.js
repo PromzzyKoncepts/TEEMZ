@@ -21,6 +21,14 @@ io.on('connection', (socket) => {
 
   socket.on('register', (userInfo) => {
     onlineUsers.set(socket.id, userInfo);
+
+
+    socket.broadcast.emit('userJoined', {
+    sender: userInfo,
+    text: `${userInfo.fullname} has entered the chat`,
+    timestamp: new Date(),
+    isSystemMessage: true
+  });
     io.emit('onlineUsers', Array.from(onlineUsers.values()));
   });
 
@@ -29,7 +37,7 @@ io.on('connection', (socket) => {
   io.emit('message', { 
     sender, 
     text: msg,
-    timestamp: new Date() // Add timestamp
+    timestamp: new Date() 
   });
 });
 

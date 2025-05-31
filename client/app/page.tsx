@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react"; // Add useRef
+import { useEffect, useState, useRef } from "react";
 import { GrSend } from "react-icons/gr";
 import io from "socket.io-client";
 
@@ -12,6 +12,8 @@ interface UserInfo {
   fullname: string;
   email: string;
   country: string;
+  code?: string; // Optional, used for country code
+  [key: string]: any; // Allow additional properties
 }
 
 interface Message {
@@ -20,7 +22,6 @@ interface Message {
   timestamp: Date;
 }
 
-// Add this utility function for formatting time
 function formatTimeAgo(date: Date): string {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -31,6 +32,52 @@ function formatTimeAgo(date: Date): string {
   return `${Math.floor(seconds / 86400)} days ago`;
 }
 
+function MessageBubble({
+  message,
+  isCurrentUser,
+}: {
+  message: Message;
+  isCurrentUser: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+    >
+      <div
+        className={`max-w-[80%] flex ${
+          isCurrentUser ? "flex-col items-end" : "flex-col items-start"
+        }`}
+      >
+        {!isCurrentUser && (
+          <span className="font-medium text-slate-500 text-sm capitalize">
+            {message?.sender?.fullname}
+          </span>
+        )}
+        <div>
+          <div
+            className={`${
+              isCurrentUser ? "bg-blue-500 text-white" : "bg-lime-200"
+            } px-3 py-2 rounded-2xl`}
+          >
+            {message.text}
+          </div>
+          <span
+            className={`text-xs text-gray-500 transition-opacity duration-300 ${
+              isHovered ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {formatTimeAgo(new Date(message.timestamp))}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -38,17 +85,16 @@ export default function Home() {
   const [typingUsers, setTypingUsers] = useState<UserInfo[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<UserInfo[]>([]);
   const [showPopup, setShowPopup] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isHoveredAlso, setIsHoveredAlso] = useState(false);
   const [tempUser, setTempUser] = useState<UserInfo>({
     fullname: "",
     email: "",
     country: "",
+    code: "",
   });
-  const messagesEndRef = useRef<HTMLDivElement>(null); // Add ref for scrolling
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
     null
-  ); // For typing indicator
+  );
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +103,20 @@ export default function Home() {
         messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const countries = [
+    { name: "Nigeria", code: "NG" },
+    { name: "United States", code: "US" },
+    { name: "United Kingdom", code: "GB" },
+    { name: "Canada", code: "CA" },
+    { name: "Germany", code: "DE" },
+    { name: "France", code: "FR" },
+    { name: "Japan", code: "JP" },
+    { name: "Australia", code: "AU" },
+    { name: "Brazil", code: "BR" },
+    { name: "India", code: "IN" },
+    // Add more countries as needed
+  ];
 
   useEffect(() => {
     socket.on("typing", ({ sender, isTyping }) => {
@@ -69,7 +129,6 @@ export default function Home() {
           return prev;
         });
 
-        // Set timeout to remove typing indicator after 3 seconds
         const timeout = setTimeout(() => {
           setTypingUsers((prev) =>
             prev.filter((u) => u?.email !== sender?.email)
@@ -134,7 +193,6 @@ export default function Home() {
     socket.emit("typing", false);
   };
 
-  // Add this utility function above your component
   function getRandomColor(email: string) {
     const colors = [
       "bg-red-400",
@@ -146,7 +204,6 @@ export default function Home() {
       "bg-indigo-400",
       "bg-teal-400",
     ];
-    // Use email hash to get consistent color for each user
     const hash = email
       .split("")
       .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
@@ -171,33 +228,37 @@ export default function Home() {
           </h1>
 
           <div className="mb-2 flex items-center gap-1">
-          <div className="md:hidden flex -space-x-2">
-            {onlineUsers.slice(0, 4).map((user, index) => (
-              <div
-                key={index}
-                className={`w-8 h-8 rounded-full ${getRandomColor(
-                  user.email
-                )} flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
+            <div className="md:hidden flex -space-x-2">
+              {onlineUsers.slice(0, 4).map((user, index) => (
+                <div
+                  key={index}
+                  className={`w-8 h-8 rounded-full ${getRandomColor(
+                    user.email
+                  )} flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
+                >
+                  {getInitials(user.fullname)}
+                </div>
+              ))}
+              {onlineUsers.length > 4 && (
+                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold border-2 border-white">
+                  +{onlineUsers.length - 4}
+                </div>
+              )}
+              <span
+                className={`w-8 h-8 rounded-full bg-lime-500 flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
               >
-                {getInitials(user.fullname)}
-              </div>
-            ))}
-            {onlineUsers.length > 4 && (
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold border-2 border-white">
-                +{onlineUsers.length - 4}
-              </div>
-            )}
-          <span className={`w-8 h-8 rounded-full bg-lime-500 flex items-center justify-center text-white text-xs font-bold border-2 border-white`}>
-            {onlineUsers.length}
-          </span>
-           {" "}online
+                {onlineUsers.length}
+              </span>{" "}
+              online
+            </div>
           </div>
-        </div>
 
           <nav className="md:flex items-center gap-4 hidden ">
             <div className="rounded-full  h-12  w-12 border border-slate-300">
               <Image
-                src="https://flagsapi.com/NG/shiny/64.png"
+                src={`https://flagsapi.com/${
+                  countries.find((c) => c.name === userInfo?.country)?.code
+                }/shiny/64.png`}
                 alt="countries"
                 height={200}
                 className="object-contain h-full w-full overflow-hidden rounded-full"
@@ -221,37 +282,59 @@ export default function Home() {
               <input
                 placeholder="Full Name"
                 autoFocus={true}
-                className="w-full mb-2 border px-3 py-2"
+                className="w-full mb-2 border px-3 py-2 rounded"
                 onChange={(e) =>
                   setTempUser({ ...tempUser, fullname: e.target.value })
                 }
               />
               <input
                 placeholder="Email"
-                className="w-full mb-2 border px-3 py-2"
+                className="w-full mb-2 border px-3 py-2 rounded"
                 onChange={(e) =>
                   setTempUser({ ...tempUser, email: e.target.value })
                 }
               />
-              <input
-                placeholder="Country"
-                className="w-full mb-4 border px-3 py-2"
-                onChange={(e) =>
-                  setTempUser({ ...tempUser, country: e.target.value })
-                }
-              />
+              <div className="relative mb-4">
+                <select
+                  value={tempUser.country}
+                  onChange={(e) =>
+                    setTempUser({ ...tempUser, country: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded appearance-none"
+                >
+                  <option value="">Select Country</option>
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+                {tempUser.country && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <Image
+                      src={`https://flagsapi.com/${
+                        countries.find((c) => c.name === tempUser.country)?.code
+                      }/shiny/32.png`}
+                      alt={tempUser.country}
+                      width={24}
+                      height={24}
+                      className="h-4 w-auto"
+                    />
+                  </div>
+                )}
+              </div>
               <button
-                className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+                className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition-colors"
                 onClick={handleRegister}
+                disabled={
+                  !tempUser.fullname || !tempUser.email || !tempUser.country
+                }
               >
                 Start Chatting
               </button>
             </div>
           </div>
         )}
-        {/* <div className="mb-2 text-sm text-green-600">
-          Online: {onlineUsers.length}
-        </div> */}
         <div className="mb-2 flex items-center gap-1">
           <div className="hidden md:flex -space-x-2">
             {onlineUsers.slice(0, 4).map((user, index) => (
@@ -269,71 +352,42 @@ export default function Home() {
                 +{onlineUsers.length - 4}
               </div>
             )}
-          <span className={`w-8 h-8 rounded-full bg-lime-500 flex items-center justify-center text-white text-xs font-bold border-2 border-white`}>
-            {onlineUsers.length}
-          </span>
-           {" "}online
+            <span
+              className={`w-8 h-8 rounded-full bg-lime-500 flex items-center justify-center text-white text-xs font-bold border-2 border-white`}
+            >
+              {onlineUsers.length}
+            </span>{" "}
+            online
           </div>
         </div>
-        {/* implement it here */}
         <div
           ref={messagesContainerRef}
-          className="flex bg-white  gap-5  text-black rounded-2xl shadow p-4 mb-4 min-h-[70dvh] md:min-h-[40vh] max-h-[50vh] overflow-y-auto"
+          className="flex flex-col bg-white gap-2 text-black rounded-2xl shadow p-4 mb-4 min-h-[70dvh] md:min-h-[40vh] max-h-[50vh] overflow-y-auto"
         >
-          <div className="flex-1">
-            {messages
-              ?.filter((m) => m.sender?.email !== userInfo?.email)
-              .map((msg, index) => (
-                <div onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} key={index} className="mb-2 flex  flex-col gap-2">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium text-slate-500 text-sm capitalize">
-                      {msg?.sender?.fullname}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="bg-lime-200 w-fit  px-3 py-2 rounded-2xl ">
-                      {msg.text}
-                    </div>
-                    {isHovered && (<span className="text-xs text-gray-500">
-                      {formatTimeAgo(new Date(msg.timestamp))}
-                    </span>)}
-                  </div>
-                </div>
-              ))}
-            {typingUsers.length > 0 && (
-              <div className="italic text-gray-500">
-                {typingUsers?.map((u, i) => (
-                  <span key={i}>
-                    {u?.fullname}
-                    {i < typingUsers?.length - 1 ? ", " : ""}
-                  </span>
-                ))}{" "}
-                is typing...
-              </div>
-            )}
-          </div>
-          <div className="flex-1">
-            {messages
-              .filter((m) => m?.sender?.email === userInfo?.email)
-              .map((msg, index) => (
-                <div
-                onMouseEnter={() => setIsHoveredAlso(true)} onMouseLeave={() => setIsHoveredAlso(false)}
-                  key={index}
-                  className="mb-2 flex items-end flex-col  text-left"
-                >
-                  {/* <div className="">
-                    <span className="font-semibold">You</span>
-                  </div> */}
-                  <div className="bg-slate-100  px-3 py-2 rounded-2xl ">
-                    {msg.text}
-                  </div>
-                  {isHoveredAlso && (<span className="text-xs text-gray-500">
-                      {formatTimeAgo(new Date(msg.timestamp))}
-                    </span>)}
-                </div>
-              ))}
-          </div>
-          <div ref={messagesEndRef} /> {/* Scroll anchor */}
+          {messages
+            .sort(
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime()
+            )
+            .map((msg, index) => (
+              <MessageBubble
+                key={index}
+                message={msg}
+                isCurrentUser={msg.sender?.email === userInfo?.email}
+              />
+            ))}
+          {typingUsers.length > 0 && (
+            <div className="italic text-gray-500">
+              {typingUsers?.map((u, i) => (
+                <span key={i}>
+                  {u?.fullname}
+                  {i < typingUsers?.length - 1 ? ", " : ""}
+                </span>
+              ))}{" "}
+              is typing...
+            </div>
+          )}
         </div>
         <div className="flex gap-2 mt-4">
           <input

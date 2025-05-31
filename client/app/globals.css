@@ -1,2 +1,18 @@
 @import "tailwindcss";
 
+
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-timestamp {
+  animation: fadeInUp 0.8s ease forwards;
+}

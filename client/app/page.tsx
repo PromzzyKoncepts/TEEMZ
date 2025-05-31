@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { GrSend } from "react-icons/gr";
+import { PiHandWavingDuotone } from "react-icons/pi";
 import io from "socket.io-client";
 
 const socket = io("http://localhost:4000");
@@ -361,32 +362,58 @@ export default function Home() {
           </div>
         </div>
         <div
+          style={{
+            backgroundImage: `url(/background.png)`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+          }}
           ref={messagesContainerRef}
-          className="flex flex-col bg-white gap-2 text-black rounded-2xl shadow p-4 mb-4 min-h-[70dvh] md:min-h-[40vh] max-h-[50vh] overflow-y-auto"
+          className="flex  object-contain flex-col bg-white gap-2 text-black rounded-2xl shadow p-4 mb-4 min-h-[70dvh] md:min-h-[50vh] md:max-h-[50vh] overflow-y-auto"
         >
-          {messages
-            .sort(
-              (a, b) =>
-                new Date(a.timestamp).getTime() -
-                new Date(b.timestamp).getTime()
-            )
-            .map((msg, index) => (
-              <MessageBubble
-                key={index}
-                message={msg}
-                isCurrentUser={msg.sender?.email === userInfo?.email}
-              />
-            ))}
-          {typingUsers.length > 0 && (
-            <div className="italic text-gray-500">
-              {typingUsers?.map((u, i) => (
-                <span key={i}>
-                  {u?.fullname}
-                  {i < typingUsers?.length - 1 ? ", " : ""}
-                </span>
-              ))}{" "}
-              is typing...
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+              <div>
+                <h3 className="text-xl font-bold text-gray-500 mb-2">
+                  No messages added yet
+                </h3>
+                <p className="text-base text-gray-600 mb-2">
+                  There {onlineUsers.length === 1 ? "is" : "are"}{" "}
+                  {onlineUsers.length}{" "}
+                  {onlineUsers.length === 1 ? "person" : "people"} online
+                </p>
+                <p className="text-lg flex items-center gap-1 text-gray-500">
+                  Start by saying <PiHandWavingDuotone color="red" size={30} />{" "}
+                  hi to everyone
+                </p>
+              </div>
             </div>
+          ) : (
+            <>
+              {messages
+                .sort(
+                  (a, b) =>
+                    new Date(a.timestamp).getTime() -
+                    new Date(b.timestamp).getTime()
+                )
+                .map((msg, index) => (
+                  <MessageBubble
+                    key={index}
+                    message={msg}
+                    isCurrentUser={msg.sender?.email === userInfo?.email}
+                  />
+                ))}
+              {typingUsers.length > 0 && (
+                <div className="italic text-gray-500">
+                  {typingUsers?.map((u, i) => (
+                    <span key={i}>
+                      {u?.fullname}
+                      {i < typingUsers?.length - 1 ? ", " : ""}
+                    </span>
+                  ))}{" "}
+                  is typing...
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className="flex gap-2 mt-4">
